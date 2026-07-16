@@ -1,67 +1,61 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 
-from database import Base, engine, get_db
-from models import Department
+from database import engine, Base, get_db
 from schemas import (
-    DepartmentCreate,
-    DepartmentDetailResponse,
-    EmployeeCreate,
-    EmployeeResponse
+    ClassroomCreate,
+    StudentCreate,
+    TransferClassRequest,
+    StudentResponse,
+    ClassroomDetailResponse
 )
-from services import create_employee_service
+from services import (
+    create_classroom_service,
+    create_student_service,
+    get_classroom_detail_service,
+    transfer_student_service
+)
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Department Employee API"
+    title="Classroom Student API"
 )
 
-@app.post("/departments")
-def create_department(
-    data: DepartmentCreate,
+@app.post("/classrooms")
+def create_classroom(
+    data: ClassroomCreate,
     db: Session = Depends(get_db)
 ):
-    department = Department(
-        name=data.name,
-        status=data.status,
-        max_employees=data.max_employees
-    )
-    db.add(department)
-    db.commit()
-    db.refresh(department)
-
-    return department
-
-@app.get(
-    "/departments/{department_id}",
-    response_model=DepartmentDetailResponse
-)
-def get_department_detail(
-    department_id: int,
-    db: Session = Depends(get_db)
-):
-    department = (
-        db.query(Department)
-        .filter(Department.id == department_id)
-        .first()
-    )
-
-    if department is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Phòng ban không tồn tại"
-        )
-
-    return department
+    return create_classroom_service(data, db)
 
 @app.post(
-    "/employees",
-    response_model=EmployeeResponse,
-    status_code=status.HTTP_201_CREATED
+    "/students",
+    response_model=StudentResponse
 )
-def create_employee(
-    data: EmployeeCreate,
+def create_student(
+    data: StudentCreate,
     db: Session = Depends(get_db)
 ):
-    return create_employee_service(data, db)
+    return create_student_service(data, db)
+
+@app.get(
+    "/classrooms/{classroom_id}",
+    response_model=ClassroomDetailResponse
+)
+def get_classroom_detail(
+    classroom_id: int,
+    db: Session = Depends(get_db)
+):
+    return get_classroom_detail_service(classroom_id, db)
+
+@app.put(
+    "/students/{student_id}/transfer",
+    response_model=StudentResponse
+)
+def transfer_student(
+    student_id: int,
+    data: TransferClassRequest,
+    db: Session = Depends(get_db)
+):
+    return transfer_student_service(student_id, data, db)
