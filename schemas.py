@@ -1,27 +1,30 @@
 from typing import List
 from pydantic import BaseModel, ConfigDict, Field
 
-class DepartmentCreate(BaseModel):
-    name: str
+class ClassroomCreate(BaseModel):
+    class_name: str
     status: str
-    max_employees: int
+    capacity: int
 
-class EmployeeCreate(BaseModel):
-    employee_code: str
+class StudentCreate(BaseModel):
+    student_code: str
     full_name: str
-    department_id: int
+    classroom_id: int
 
-class EmployeeResponse(BaseModel):
+class TransferClassRequest(BaseModel):
+    new_classroom_id: int
+
+class StudentResponse(BaseModel):
     id: int
-    employee_code: str
+    student_code: str
     full_name: str
-    department_id: int
+    classroom_id: int
     model_config = ConfigDict(from_attributes=True)
 
-class DepartmentDetailResponse(BaseModel):
+class ClassroomDetailResponse(BaseModel):
     id: int
-    name: str
+    class_name: str
     status: str
-    max_employees: int
-    employees: List[EmployeeResponse] = Field(default_factory=list)
+    capacity: int
+    students: List[StudentResponse] = Field(default_factory=list)
     model_config = ConfigDict(from_attributes=True)
